@@ -774,6 +774,7 @@ declare module laya.ani.bone {
         mRootBone: Bone;
         mBoneArr: Array<any>;
         loadAni(url: string): void;
+        loadSpineAni(spineResDir: string, spineFilename: string): void;
         /**
          * 解析骨骼动画数据
          * @param	texture			骨骼动画用到的纹理
