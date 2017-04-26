@@ -4439,6 +4439,18 @@
 			this.parseData(null,tSkBuffer);
 		}
 
+		__proto.loadSpineAni=function(spineResDir, spineFilename){
+			if (spineResDir[spineResDir.length-1]=="/")
+				spineResDir = spineResDir.slice(0, spineResDir.length-1);
+
+			this._path = spineResDir+"/";
+			var tools = new dragonBones.BoneAniToolsLive();
+			tools.loadSpineFile(this, spineResDir, spineFilename, function(tSkBuffer){
+				// console.log(tSkBuffer);
+				this.parseData(null, tSkBuffer);
+			});
+		}
+
 		/**
 		*解析骨骼动画数据
 		*@param texture 骨骼动画用到的纹理
