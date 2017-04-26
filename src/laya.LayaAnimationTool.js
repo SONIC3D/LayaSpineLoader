@@ -6638,5 +6638,384 @@
 	})(Sprite)
 
 
+	//class dragonBones.BoneAniToolsLive extends Tools
+	var BoneAniToolsLive=(function(_super){
+		function BoneAniToolsLive(){
+			this.mTexturePath=null;
+			this.mTextureJsonPath=null;
+			this.mSkeletonJsonPath=null;
+			this.mSaveAniPath=null;
+			this.mSaveTexturePath=null;
+			this.mTexture=null;
+			this.mTextureJson=null;
+			this.mSkeletonJson=null;
+			this.versionPath="version4.5";
+			this.DBFileName="man";
+			this.mCompleteFun=null;
+			this.mFailFun=null;
+			this.mSpineFactory=null;
+			this.mDBFactory=null;
+			this.mDBTools=null;
+			this.mNodePath=null;
+			this.tExType=0;
+			this.mTexturePathList=null;
+			this.testCompleteFun=null;
+			this.mInvoker=null;
+			BoneAniToolsLive.__super.call(this);
+			if (Laya.stage==null){
+				Laya.init(1,1);
+			}
+		}
+
+		__class(BoneAniToolsLive,'dragonBones.BoneAniToolsLive',_super);
+		var __proto=BoneAniToolsLive.prototype;
+
+		// Load spine exported files(json,atlas,png) and pass back the converted bytes buffer to the callback function.
+		// Parameters:
+		//   invokerThisObj: Invoker context object
+		//   spineResDir:    Dir that contains the target spine resources.End without '/'
+		//   spineFilename:  Filename of target spine resources (without extention name).
+		//   completeFunc:   Callback function that would be called after spine resources converted in memory.(function signature:fn(bytesBuffer:ArrayBuffer))
+		__proto.loadSpineFile = function(invokerThisObj, spineResDir, spineFilename, completeFunc){
+			BoneAniToolsLive.mBoneToolsKey=true;
+			BoneAniTools.mBoneToolsKey=true;    // To avoid debug bones texture shows up.Search "BoneAniTools.mBoneToolsKey" reference in class SpineFactory
+			this.mFactoryType = 1;
+			this.versionPath="res/spine";
+			this.mInvoker = invokerThisObj;
+			this.testCompleteFun=completeFunc;
+
+			var baseSpineFilePath = this.join(spineResDir, spineFilename);
+			this.mTexturePath = baseSpineFilePath+".png";
+			this.mTextureJsonPath = baseSpineFilePath+".atlas";
+			this.mSkeletonJsonPath = baseSpineFilePath+".json";
+			Laya.loader.load([
+				{url: this.mTexturePath, type: "image"},
+				{url: this.mTextureJsonPath, type: "text"},
+				{url: this.mSkeletonJsonPath, type: "json"}
+			], Handler.create(this, this.onLoaded), null, null, 1, true);
+		}
+
+		__proto.loadFile=function(nodePath,dbTools,path,outPath,completeFun,failFun,type,eType,tDBFileName){
+			(type===void 0)&& (type=0);
+			(eType===void 0)&& (eType=0);
+			this.mNodePath=nodePath;
+			this.mDBTools=dbTools;
+			BoneAniToolsLive.mBoneToolsKey=true;
+			this.mFactoryType=type;
+			var fileName;
+			this.DBFileName=tDBFileName||nodePath.basename(path).split(".")[0];
+			this.versionPath=path;
+			this.mCompleteFun=completeFun;
+			this.mFailFun=failFun;
+			Laya.loader.on("error",this,this.onError)
+			this.tExType=eType;
+			switch(type){
+				case 0:
+					if (eType==2){
+						this.mTexturePath=nodePath.join(this.versionPath,this.DBFileName+"_tex.png");
+						this.mTextureJsonPath=nodePath.join(this.versionPath,this.DBFileName+"_tex.json");
+						this.mSkeletonJsonPath=nodePath.join(this.versionPath,this.DBFileName+"_ske.json");
+					}else{
+						this.mTexturePath=nodePath.join(this.versionPath,"texture.png");
+						this.mTextureJsonPath=nodePath.join(this.versionPath,"texture.json");
+						this.mSkeletonJsonPath=nodePath.join(this.versionPath,this.DBFileName+".json");
+					}
+					this.mSaveAniPath=nodePath.join(outPath,this.DBFileName+".sk");
+					this.mSaveTexturePath=outPath;
+					Laya.loader.load([{url:this.mTexturePath,type:"image" },
+						{url:this.mTextureJsonPath,type:"json" },
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+					break ;
+				case 1:
+					this.mTexturePath=nodePath.join(this.versionPath,this.DBFileName+".png");
+					this.mTextureJsonPath=nodePath.join(this.versionPath,this.DBFileName+".atlas");
+					this.mSkeletonJsonPath=nodePath.join(this.versionPath,this.DBFileName+".json");
+					this.mSaveAniPath=nodePath.join(outPath,this.DBFileName+".sk");
+					this.mSaveTexturePath=outPath;
+					Laya.loader.load([{url:this.mTexturePath,type:"image" },
+						{url:this.mTextureJsonPath,type:"text" },
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+					break ;
+			}
+		}
+
+		__proto.testLoaderFile=function(type,name,path,dbTools,completeFun,failFun){
+			this.mDBTools=dbTools;
+			this.mFactoryType=type;
+			var fileName;
+			this.DBFileName=name;
+			this.versionPath=path;
+			this.mCompleteFun=completeFun;
+			this.mFailFun=failFun;
+			Laya.loader.on("error",this,this.onError)
+			switch(type){
+				case 0:
+					if (this.tExType==2){
+						this.mTexturePath=this.versionPath+"/"+this.DBFileName+"_tex.png";
+						this.mTextureJsonPath=this.versionPath+"/"+this.DBFileName+"_tex.json";
+						this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+"_ske.json";
+					}else{
+						this.mTexturePath=this.versionPath+"/texture.png";
+						this.mTextureJsonPath=this.versionPath+"/texture.json";
+						this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+".json";
+					}
+					this.mSaveAniPath=this.versionPath+this.DBFileName;
+					Laya.loader.load([{url:this.mTexturePath,type:"image" },
+						{url:this.mTextureJsonPath,type:"json" },
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded));
+					break ;
+				case 1:
+					this.mTexturePath=this.versionPath+"/"+this.DBFileName+".png";
+					this.mTextureJsonPath=this.versionPath+"/"+this.DBFileName+".atlas";
+					this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+".json";
+					this.mSaveAniPath=this.versionPath+this.DBFileName;
+					Laya.loader.load([{url:this.mTexturePath,type:"image" },
+						{url:this.mTextureJsonPath,type:"text" },
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded));
+					break ;
+			}
+		}
+
+		__proto.onError=function(err){
+			var tErrInfo="---"+this.DBFileName+"---"+"加载错误:"+err;
+			console.warn(tErrInfo);
+			this.clear();
+		}
+
+		__proto.onErrorVersion=function(ver){
+			var msg;
+			switch(this.mFactoryType){
+				case 0:
+					msg="DragonBone支持版本为:"+"4.5"+"~"+"4.9.5"+""+"当前文件版本为"+ver;
+					break ;
+				case 1:
+					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.5.46"+""+"当前文件版本为"+ver;
+					break ;
+			}
+			msg+="\n动画结果可能不正确:"+this.mSkeletonJsonPath;
+			console.log(msg);
+		}
+
+		__proto.onLoaded=function(){
+			this.mTexture=Loader.getRes(this.mTexturePath);
+			this.mTextureJson=Loader.getRes(this.mTextureJsonPath);
+			this.mSkeletonJson=Loader.getRes(this.mSkeletonJsonPath);
+			var tVer;
+			tVer=this.getSkeletonVersion(this.mSkeletonJson,this.mFactoryType);
+			if (!this.isSkeletonVersionOK(tVer,this.mFactoryType)){
+				this.onErrorVersion(tVer);
+			}
+			switch(this.mFactoryType){
+				case 0:
+					this.loadComplete();
+					break ;
+				case 1:
+					try {
+						var tAtlas=new Atlas();
+						this.mTexturePathList=tAtlas.preInit(this.mTextureJson);
+						var tLoadList=[];
+						var tObject;
+						var tPath;
+						for (var i=0;i < this.mTexturePathList.length;i++){
+							tPath=this.join(this.versionPath,this.mTexturePathList[i]);
+							tObject={url:tPath,type:"image" };
+							tLoadList.push(tObject);
+						}
+						Laya.loader.load(tLoadList,Handler.create(this,this.loadComplete));
+					}catch (e){
+						this.onError("纹理头解析出错:"+e);
+					}
+					break ;
+			}
+		}
+
+		__proto.getSkeletonVersion=function(dataO,type){
+			var ver;
+			var verNum=NaN;
+			var isOk=false;
+			switch(type){
+				case 0:
+					ver=dataO.version;
+					verNum=BoneAniToolsLive.getVerNum(ver);
+					isOk=verNum >=BoneAniToolsLive.MinDragonNum && verNum <=BoneAniToolsLive.MaxDragonNum;
+					break ;
+				case 1:
+					ver=dataO.skeleton.spine;
+					verNum=BoneAniToolsLive.getVerNum(ver);
+					isOk=verNum >=BoneAniToolsLive.MinSpineNum && verNum <=BoneAniToolsLive.MaxSpineNum;
+					break ;
+			}
+			console.log("skeletonVer:",ver,isOk);
+			return ver;
+		}
+
+		__proto.isSkeletonVersionOK=function(ver,type){
+			var isOk=false;
+			var verNum=NaN;
+			switch(type){
+				case 0:
+					verNum=BoneAniToolsLive.getVerNum(ver);
+					isOk=verNum >=BoneAniToolsLive.MinDragonNum && verNum <=BoneAniToolsLive.MaxDragonNum;
+					break ;
+				case 1:
+					verNum=BoneAniToolsLive.getVerNum(ver);
+					isOk=verNum >=BoneAniToolsLive.MinSpineNum && verNum <=BoneAniToolsLive.MaxSpineNum;
+					break ;
+			}
+			return isOk;
+		}
+
+		__proto.loadComplete=function(){
+			var tTextureName;
+			var i=0;
+			try {
+				switch(this.mFactoryType){
+					case 0:
+						this.mDBFactory=new LayaFactory()
+						this.mDBFactory.on("complete",this,this.onCompleteHandler);
+						this.mDBFactory.parseData(this.mTexture,this.mTextureJson,this.mSkeletonJson,this.DBFileName+".png");
+						break ;
+					case 1:
+						this.mSpineFactory=new SpineFactory();
+						this.mSpineFactory.on("complete",this,this.onCompleteHandler);
+						var tTextureMap={};
+						var tTexture;
+						for (i=0;i < this.mTexturePathList.length;i++){
+							tTextureName=this.mTexturePathList[i];
+							tTexture=Loader.getRes(this.join(this.versionPath,tTextureName));
+							tTextureMap[tTextureName]=tTexture;
+						}
+						this.mSpineFactory.parseData(tTextureMap,this.mTextureJson,this.mSkeletonJson);
+						break ;
+				}
+			}catch (e){
+				this.onError("解析文件出错:"+e);
+			}
+		}
+
+		__proto.onCompleteHandler=function(){
+			var testLayaAnimation=new TestLayaAnimation();
+			var tLayaAni;
+			var stringJSON;
+			try {
+				switch(this.mFactoryType){
+					case 0:
+						tLayaAni=testLayaAnimation.getLayaBoneAni(this.mDBFactory.mArmatureArr,this.mDBFactory.mDBTextureDataArray,"Dragon");
+						break ;
+					case 1:
+						tLayaAni=testLayaAnimation.getLayaBoneAni(this.mSpineFactory.mSkeletonData.mArmatureArr,this.mSpineFactory.mDBTextureDataArray);
+						break ;
+				}
+			}catch (e){
+				this.onError("组织数据出错:"+e);
+			}
+			try {
+				var buffer=this.getObjectBuffer(tLayaAni);
+			}catch (e){
+				this.onError("导出二进制数据出错:"+e);
+			}
+			if (this.testCompleteFun != null) {
+				this.testCompleteFun.call(this.mInvoker, buffer);
+			}
+		}
+
+		//保存文件
+		__proto.save=function(filename,dataView){
+			var tTextureList=[];
+			var tTextureOutList=[];
+			try {
+				if (BoneAniToolsLive.mBoneToolsKey){
+					var tTextureName;
+					switch(this.mFactoryType){
+						case 0:
+							if (this.tExType==2){
+								tTextureList.push(this.join(this.versionPath,this.DBFileName+"_tex.png"));
+							}else{
+								tTextureList.push(this.join(this.versionPath,"texture.png"));
+							}
+							tTextureOutList.push(this.join(this.mSaveTexturePath,this.DBFileName+".png"));
+							break ;
+						case 1:
+							for (var i=0;i < this.mTexturePathList.length;i++){
+								tTextureName=this.mTexturePathList[i];
+								tTextureList.push(this.join(this.versionPath,tTextureName));
+								tTextureOutList.push(this.join(this.mSaveTexturePath,tTextureName));
+							}
+							break ;
+					}
+				}
+			}catch (e){
+				this.onError("清除loader资源出错:"+e);
+			}
+			this.mCompleteFun.call(this.mDBTools,filename,dataView,tTextureList,tTextureOutList);
+		}
+
+		__proto.clear=function(){
+			try {
+				if (BoneAniToolsLive.mBoneToolsKey){
+					Loader.clearRes(this.mTexturePath);
+					Loader.clearRes(this.mTextureJsonPath);
+					Loader.clearRes(this.mSkeletonJsonPath);
+					var tTextureName;
+					if (this.mTexturePathList){
+						switch(this.mFactoryType){
+							case 1:
+								for (var i=0;i < this.mTexturePathList.length;i++){
+									tTextureName=this.mTexturePathList[i];
+									Loader.clearRes(this.join(this.versionPath,tTextureName));
+								}
+								break ;
+						}
+						this.mTexturePathList.length=0;
+					}
+				}
+			}catch (e){
+				this.onError("清除loader资源出错:"+e);
+			}
+		}
+
+		__proto.join=function(str1,str2){
+			var tOut;
+			if (this.mNodePath){
+				tOut=this.mNodePath.join(str1,str2);
+			}else {
+				tOut=str1+"/"+str2;
+			}
+			return tOut;
+		}
+
+		BoneAniToolsLive.getVerNum=function(ver){
+			var nums;
+			nums=ver.split(".");
+			var i=0,len=0;
+			len=nums.length;
+			var rst=NaN;
+			rst=0;
+			var tWeight=NaN;
+			tWeight=1;
+			var tValue=NaN;
+			for (i=0;i < len;i++){
+				tValue=parseInt(nums[i]);
+				if (isNaN(tValue)){
+					tValue=0;
+				}
+				rst+=tValue *tWeight;
+				tWeight *=0.01;
+			}
+			return rst;
+		}
+
+		BoneAniToolsLive.mBoneToolsKey=false;
+		BoneAniToolsLive.MinSpine="3.4.0.2";
+		BoneAniToolsLive.MaxSpine="3.5.46";
+		BoneAniToolsLive.MinDragon="4.5";
+		BoneAniToolsLive.MaxDragon="4.9.5";
+		__static(BoneAniToolsLive,
+			['MinSpineNum',function(){return this.MinSpineNum=BoneAniToolsLive.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniToolsLive.getVerNum("3.5.46");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniToolsLive.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniToolsLive.getVerNum("4.9.5");}
+			]);
+		return BoneAniToolsLive;
+	})(Tools)
+
+
 	Laya.__init([DBAnimationData]);
 })(window,document,Laya);
