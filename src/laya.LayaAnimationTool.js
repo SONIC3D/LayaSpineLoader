@@ -7017,5 +7017,30 @@
 	})(Tools)
 
 
+	//class laya.ani.bone.SpineAnimationTemplet extends laya.ani.bone.Templet
+	var SpineAnimationTemplet = (function (_super) {
+		function SpineAnimationTemplet() {
+			SpineAnimationTemplet.__super.call(this);
+		}
+
+		__class(SpineAnimationTemplet, 'laya.ani.bone.SpineAnimationTemplet', _super);
+		var __proto = SpineAnimationTemplet.prototype;
+
+		__proto.loadSpineAni = function (spineResDir, spineFilename) {
+			if (spineResDir[spineResDir.length - 1] == "/")
+				spineResDir = spineResDir.slice(0, spineResDir.length - 1);
+
+			this._path = spineResDir + "/";
+			var tools = new dragonBones.BoneAniToolsLive();
+			tools.loadSpineFile(this, spineResDir, spineFilename, function (tSkBuffer) {
+				// console.log(tSkBuffer);
+				this.parseData(null, tSkBuffer);
+			});
+		}
+
+		return SpineAnimationTemplet;
+	})(laya.ani.bone.Templet)
+
+
 	Laya.__init([DBAnimationData]);
 })(window,document,Laya);
