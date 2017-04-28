@@ -556,8 +556,9 @@
 			}
 			if (hasSkew){
 				this.checkSkew();
-				}else{
-				this.checkAngle();
+			}
+			else {
+				this.checkAngleNew();
 			}
 		}
 
@@ -566,6 +567,54 @@
 			if (this.frameArr.length > 0){
 				DBAniBoneData.dealRotations(this.frameArr,"skewX");
 				DBAniBoneData.dealRotations(this.frameArr,"skewY");
+			}
+		}
+
+		__proto.checkAngleNew=function(){
+			var tAnimBoneFrame;
+			if (this.frameArr.length > 0){
+				tAnimBoneFrame=this.frameArr[0];
+				var tLastAngle=tAnimBoneFrame.transform.skY;
+				var tCurrAngle=0;
+				var tAngle=0;
+				var tAbsAngle=0;
+				var tResultAngle=tLastAngle;
+				var preRote=tAnimBoneFrame.tweenRotate;
+				var tD=NaN;
+				for (var i=1,n=this.frameArr.length;i < n;i++){
+					tAnimBoneFrame=this.frameArr[i];
+					tCurrAngle=tAnimBoneFrame.transform.skY;
+					tAngle=tCurrAngle-tResultAngle;
+					while (tAngle > 180){
+						tAngle-=360;
+					}
+					while (tAngle <-180){
+						tAngle+=360;
+					}
+					if (preRote !=0&&preRote!=undefined){
+						if (preRote > 0){
+							if (tAngle > 0){
+								tAngle=preRote *360+tAngle;
+							}
+							else {
+								tAngle=preRote *360+tAngle+360;
+							}
+						}
+						else {
+							if (tAngle < 0){
+								tAngle=preRote *360+tAngle;
+							}
+							else {
+								tAngle=preRote *360+tAngle-360;
+							}
+						}
+					}
+					else {}
+					tResultAngle+=tAngle;
+					tLastAngle=tCurrAngle;
+					tAnimBoneFrame.transform.skX=tAnimBoneFrame.transform.skY=tResultAngle;
+					preRote=tAnimBoneFrame.tweenRotate;
+				}
 			}
 		}
 
@@ -586,7 +635,8 @@
 					if (tAbsAngle > 180){
 						if (tAngle > 0){
 							tAngle=tAngle-360;
-							}else {
+						}
+						else {
 							tAngle=360+tAngle;
 						}
 					}
@@ -637,6 +687,7 @@
 			this.curve=[];
 			this.event=null;
 			this.sound=null;
+			this.tweenRotate=0;
 			this.transform=null;
 			this.time=0;
 		}
@@ -655,6 +706,7 @@
 			this.curve=data.curve;
 			this.event=data.event;
 			this.sound=data.sound;
+			this.tweenRotate=data.tweenRotate;
 			var tTransform=new DBTransform();
 			tTransform.initData(data.transform);
 			tTransform.setLerp(this.tweenEasing,this.curve);
@@ -4137,6 +4189,7 @@
 			this.mTools=new BoneAniTools();
 			this.DBFileName="Bicycle";
 			this.DBFileName="NewProject";
+			this.DBFileName="TestRo";
 			this.mTools.tExType=2;
 			this.mTools.testLoaderFile(0,this.DBFileName,this.versionPath+this.DBFileName,this,this.complete,this.fail);
 			DragonBoneTools;
@@ -4288,10 +4341,10 @@
 			var msg;
 			switch(this.mFactoryType){
 				case 0:
-					msg="DragonBone支持版本为:"+"4.5"+"~"+"4.9.5"+""+"当前文件版本为"+ver;
+					msg="DragonBone支持版本为:"+"4.5"+"~"+"5.1.0"+""+"当前文件版本为"+ver;
 					break ;
 				case 1:
-					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.5.46"+""+"当前文件版本为"+ver;
+					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.6.16"+""+"当前文件版本为"+ver;
 					break ;
 				}
 			if (this.mFailFun !=null){
@@ -4486,6 +4539,18 @@
 			return tOut;
 		}
 
+		__getset(1,BoneAniTools,'SpineTip',function(){
+			return BoneAniTools.getVersionTip("3.4.0.2","3.6.16");
+		},Tools._$SET_SpineTip);
+
+		__getset(1,BoneAniTools,'DragonBoneTip',function(){
+			return BoneAniTools.getVersionTip("4.5","5.1.0");
+		},Tools._$SET_DragonBoneTip);
+
+		BoneAniTools.getVersionTip=function(min,max){
+			return "("+min+"~"+max+")";
+		}
+
 		BoneAniTools.getVerNum=function(ver){
 			var nums;
 			nums=ver.split(".");
@@ -4509,11 +4574,11 @@
 
 		BoneAniTools.mBoneToolsKey=false;
 		BoneAniTools.MinSpine="3.4.0.2";
-		BoneAniTools.MaxSpine="3.5.46";
+		BoneAniTools.MaxSpine="3.6.16";
 		BoneAniTools.MinDragon="4.5";
-		BoneAniTools.MaxDragon="4.9.5";
+		BoneAniTools.MaxDragon="5.1.0";
 		__static(BoneAniTools,
-		['MinSpineNum',function(){return this.MinSpineNum=BoneAniTools.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniTools.getVerNum("3.5.46");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniTools.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniTools.getVerNum("4.9.5");}
+		['MinSpineNum',function(){return this.MinSpineNum=BoneAniTools.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniTools.getVerNum("3.6.16");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniTools.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniTools.getVerNum("5.1.0");}
 		]);
 		return BoneAniTools;
 	})(Tools)
@@ -6786,10 +6851,10 @@
 			var msg;
 			switch(this.mFactoryType){
 				case 0:
-					msg="DragonBone支持版本为:"+"4.5"+"~"+"4.9.5"+""+"当前文件版本为"+ver;
+					msg="DragonBone支持版本为:"+"4.5"+"~"+"5.1.0"+""+"当前文件版本为"+ver;
 					break ;
 				case 1:
-					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.5.46"+""+"当前文件版本为"+ver;
+					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.6.16"+""+"当前文件版本为"+ver;
 					break ;
 			}
 			msg+="\n动画结果可能不正确:"+this.mSkeletonJsonPath;
@@ -6984,6 +7049,18 @@
 			return tOut;
 		}
 
+		__getset(1,BoneAniToolsLive,'SpineTip',function(){
+			return BoneAniToolsLive.getVersionTip("3.4.0.2","3.6.16");
+		},Tools._$SET_SpineTip);
+
+		__getset(1,BoneAniToolsLive,'DragonBoneTip',function(){
+			return BoneAniToolsLive.getVersionTip("4.5","5.1.0");
+		},Tools._$SET_DragonBoneTip);
+
+		BoneAniToolsLive.getVersionTip=function(min,max){
+			return "("+min+"~"+max+")";
+		}
+
 		BoneAniToolsLive.getVerNum=function(ver){
 			var nums;
 			nums=ver.split(".");
@@ -7007,12 +7084,12 @@
 
 		BoneAniToolsLive.mBoneToolsKey=false;
 		BoneAniToolsLive.MinSpine="3.4.0.2";
-		BoneAniToolsLive.MaxSpine="3.5.46";
+		BoneAniToolsLive.MaxSpine="3.6.16";
 		BoneAniToolsLive.MinDragon="4.5";
-		BoneAniToolsLive.MaxDragon="4.9.5";
+		BoneAniToolsLive.MaxDragon="5.1.0";
 		__static(BoneAniToolsLive,
-			['MinSpineNum',function(){return this.MinSpineNum=BoneAniToolsLive.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniToolsLive.getVerNum("3.5.46");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniToolsLive.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniToolsLive.getVerNum("4.9.5");}
-			]);
+		['MinSpineNum',function(){return this.MinSpineNum=BoneAniTools.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniTools.getVerNum("3.6.16");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniTools.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniTools.getVerNum("5.1.0");}
+		]);
 		return BoneAniToolsLive;
 	})(Tools)
 
