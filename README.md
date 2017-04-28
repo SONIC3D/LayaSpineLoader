@@ -6,3 +6,9 @@ This project is mean to provide a spine 2d live loader in runtime for LayaAir,wh
 The code is based on the code of static spine converter which is embedded in LayaAir IDE.The original filename is "laya.LayaAnimationTool.js",which is stored in the directory "resources/app/out/vs/layaEditor/h5/js" of LayaAir IDE.
 
 Please note that to exchange the storage space and additional cost in development workflow,this live loader sacrifise the performance in load-time.You can't have your cake and eat it.
+
+## Usage
+1. Copy laya.LayaAnimationTool.js to your runtime directory and add it to the container html file.
+2. Copy LayaAnimationTool.d.ts to project dir.
+3. Instantiate Laya.SpineAnimationTemplet and call loadSpineAni to load spine exported resource.
+4. Check the example project for more detail.
