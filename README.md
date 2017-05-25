@@ -1,5 +1,10 @@
 # Spine 2D Live Loader for LayaAir
 
+## Changelog
+* 2017.May.25: Verified there is no need to change anything with the newest LayaAir IDE 1.7.5 beta update.
+* 2017.Apr.28: Updated for using files come from LayaAir IDE 1.7.4 beta.
+* 2017.Apr.27: Initial version based on LayaAir IDE 1.7.3 beta.
+
 ## Introduction
 This project is mean to provide a spine 2d live loader in runtime for LayaAir,which is an alternative solution compare to  the original one provided by LayaAir that convert spine ".json" and ".atlas" to ".sk" file statically in development time.
 
