@@ -6864,11 +6864,11 @@
 			BoneAniToolsLive.mBoneToolsKey=true;
 			BoneAniTools.mBoneToolsKey=true;    // To avoid debug bones texture shows up.Search "BoneAniTools.mBoneToolsKey" reference in class SpineFactory
 			this.mFactoryType = 1;
-			this.versionPath="res/spine";
+			this.versionPath=spineResDir;		// Spine resource path. Example: "res/spine";
 			this.mInvoker = invokerThisObj;
 			this.testCompleteFun=completeFunc;
 
-			var baseSpineFilePath = this.join(spineResDir, spineFilename);
+			var baseSpineFilePath = this.join(this.versionPath, spineFilename);
 			this.mTexturePath = baseSpineFilePath+".png";
 			this.mTextureJsonPath = baseSpineFilePath+".atlas";
 			this.mSkeletonJsonPath = baseSpineFilePath+".json";
