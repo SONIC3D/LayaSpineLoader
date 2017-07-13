@@ -7268,7 +7268,7 @@
 		BoneAniToolsLive.MinDragon="4.5";
 		BoneAniToolsLive.MaxDragon="5.1.0";
 		__static(BoneAniToolsLive,
-		['MinSpineNum',function(){return this.MinSpineNum=BoneAniTools.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniTools.getVerNum("3.6.16");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniTools.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniTools.getVerNum("5.1.0");}
+		['MinSpineNum',function(){return this.MinSpineNum=BoneAniToolsLive.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniToolsLive.getVerNum("3.6.16");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniToolsLive.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniToolsLive.getVerNum("5.1.0");}
 		]);
 		return BoneAniToolsLive;
 	})(Tools)
