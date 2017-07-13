@@ -556,8 +556,9 @@
 			}
 			if (hasSkew){
 				this.checkSkew();
-				}else{
-				this.checkAngle();
+			}
+			else {
+				this.checkAngleNew();
 			}
 		}
 
@@ -566,6 +567,54 @@
 			if (this.frameArr.length > 0){
 				DBAniBoneData.dealRotations(this.frameArr,"skewX");
 				DBAniBoneData.dealRotations(this.frameArr,"skewY");
+			}
+		}
+
+		__proto.checkAngleNew=function(){
+			var tAnimBoneFrame;
+			if (this.frameArr.length > 0){
+				tAnimBoneFrame=this.frameArr[0];
+				var tLastAngle=tAnimBoneFrame.transform.skY;
+				var tCurrAngle=0;
+				var tAngle=0;
+				var tAbsAngle=0;
+				var tResultAngle=tLastAngle;
+				var preRote=tAnimBoneFrame.tweenRotate;
+				var tD=NaN;
+				for (var i=1,n=this.frameArr.length;i < n;i++){
+					tAnimBoneFrame=this.frameArr[i];
+					tCurrAngle=tAnimBoneFrame.transform.skY;
+					tAngle=tCurrAngle-tResultAngle;
+					while (tAngle > 180){
+						tAngle-=360;
+					}
+					while (tAngle <-180){
+						tAngle+=360;
+					}
+					if (preRote !=0&&preRote!=undefined){
+						if (preRote > 0){
+							if (tAngle > 0){
+								tAngle=preRote *360+tAngle;
+							}
+							else {
+								tAngle=preRote *360+tAngle+360;
+							}
+						}
+						else {
+							if (tAngle < 0){
+								tAngle=preRote *360+tAngle;
+							}
+							else {
+								tAngle=preRote *360+tAngle-360;
+							}
+						}
+					}
+					else {}
+					tResultAngle+=tAngle;
+					tLastAngle=tCurrAngle;
+					tAnimBoneFrame.transform.skX=tAnimBoneFrame.transform.skY=tResultAngle;
+					preRote=tAnimBoneFrame.tweenRotate;
+				}
 			}
 		}
 
@@ -586,7 +635,8 @@
 					if (tAbsAngle > 180){
 						if (tAngle > 0){
 							tAngle=tAngle-360;
-							}else {
+						}
+						else {
 							tAngle=360+tAngle;
 						}
 					}
@@ -637,6 +687,7 @@
 			this.curve=[];
 			this.event=null;
 			this.sound=null;
+			this.tweenRotate=0;
 			this.transform=null;
 			this.time=0;
 		}
@@ -655,6 +706,7 @@
 			this.curve=data.curve;
 			this.event=data.event;
 			this.sound=data.sound;
+			this.tweenRotate=data.tweenRotate;
 			var tTransform=new DBTransform();
 			tTransform.initData(data.transform);
 			tTransform.setLerp(this.tweenEasing,this.curve);
@@ -1753,6 +1805,9 @@
 				var tPath=this.mFileList.shift();
 				if ((tPath instanceof Array)){
 					var tArr=tPath;
+					if (tArr.length==4){
+						this.mTools.loadFile(this.nodePath,this,tPath[0],this.mOutPath,this.completeHandler,this.failHandler,this.mType,tPath[1],tArr[2],tArr[3]);
+					}else
 					if (tArr.length==3){
 						this.mTools.loadFile(this.nodePath,this,tPath[0],this.mOutPath,this.completeHandler,this.failHandler,this.mType,tPath[1],tArr[2]);
 						}else{
@@ -1872,6 +1927,17 @@
 						&& this.haveFile(name+"_tex.json",fileArray)
 					&& this.haveFile(name+"_ske.json",fileArray)){
 						return [tDir,2,name];
+					}
+					if (this.haveFile(name+"_tex_0.png",fileArray)){
+						var fileLists;
+						fileLists=[];
+						var tI=0;
+						tI=0;
+						while (this.haveFile(name+"_tex_"+tI+".png",fileArray)){
+							fileLists.push(name+"_tex_"+tI+".png");
+							tI++;
+						}
+						return [tDir,3,name,fileLists];
 					}
 					break ;
 				case 1:
@@ -4137,7 +4203,10 @@
 			this.mTools=new BoneAniTools();
 			this.DBFileName="Bicycle";
 			this.DBFileName="NewProject";
-			this.mTools.tExType=2;
+			this.DBFileName="TestRo";
+			this.DBFileName="testmpic";
+			this.mTools.tExType=3;
+			this.mTools.textureFileNames=["testmpic_tex_0.png","testmpic_tex_1.png"];
 			this.mTools.testLoaderFile(0,this.DBFileName,this.versionPath+this.DBFileName,this,this.complete,this.fail);
 			DragonBoneTools;
 		}
@@ -4186,6 +4255,7 @@
 			this.mDBTools=null;
 			this.mNodePath=null;
 			this.tExType=0;
+			this.textureFileNames=null;
 			this.mTexturePathList=null;
 			BoneAniTools.__super.call(this);
 			if (Laya.stage==null){
@@ -4195,7 +4265,7 @@
 
 		__class(BoneAniTools,'dragonBones.BoneAniTools',_super);
 		var __proto=BoneAniTools.prototype;
-		__proto.loadFile=function(nodePath,dbTools,path,outPath,completeFun,failFun,type,eType,tDBFileName){
+		__proto.loadFile=function(nodePath,dbTools,path,outPath,completeFun,failFun,type,eType,tDBFileName,textureFileNames){
 			(type===void 0)&& (type=0);
 			(eType===void 0)&& (eType=0);
 			this.mNodePath=nodePath;
@@ -4209,8 +4279,14 @@
 			this.mFailFun=failFun;
 			Laya.loader.on("error",this,this.onError)
 			this.tExType=eType;
+			this.textureFileNames=textureFileNames;
 			switch(type){
 				case 0:
+					if (this.tExType==3){
+						this.mTexturePath=this.versionPath+"/"+this.DBFileName+"_tex.png";
+						this.mTextureJsonPath=this.versionPath+"/"+this.DBFileName+"_tex.json";
+						this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+"_ske.json";
+					}else
 					if (eType==2){
 						this.mTexturePath=nodePath.join(this.versionPath,this.DBFileName+"_tex.png");
 						this.mTextureJsonPath=nodePath.join(this.versionPath,this.DBFileName+"_tex.json");
@@ -4222,9 +4298,14 @@
 					}
 					this.mSaveAniPath=nodePath.join(outPath,this.DBFileName+".sk");
 					this.mSaveTexturePath=outPath;
-					Laya.loader.load([{url:this.mTexturePath,type:"image" },
-					{url:this.mTextureJsonPath,type:"json" },
-					{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+					if (this.tExType==3){
+						Laya.loader.load([
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+						}else{
+						Laya.loader.load([{url:this.mTexturePath,type:"image" },
+						{url:this.mTextureJsonPath,type:"json" },
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+					}
 					break ;
 				case 1:
 					this.mTexturePath=nodePath.join(this.versionPath,this.DBFileName+".png");
@@ -4250,6 +4331,11 @@
 			Laya.loader.on("error",this,this.onError)
 			switch(type){
 				case 0:
+					if (this.tExType==3){
+						this.mTexturePath=this.versionPath+"/"+this.DBFileName+"_tex.png";
+						this.mTextureJsonPath=this.versionPath+"/"+this.DBFileName+"_tex.json";
+						this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+"_ske.json";
+					}else
 					if (this.tExType==2){
 						this.mTexturePath=this.versionPath+"/"+this.DBFileName+"_tex.png";
 						this.mTextureJsonPath=this.versionPath+"/"+this.DBFileName+"_tex.json";
@@ -4260,9 +4346,14 @@
 						this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+".json";
 					}
 					this.mSaveAniPath=this.versionPath+this.DBFileName;
-					Laya.loader.load([{url:this.mTexturePath,type:"image" },
-					{url:this.mTextureJsonPath,type:"json" },
-					{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded));
+					if (this.tExType==3){
+						Laya.loader.load([
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+						}else{
+						Laya.loader.load([{url:this.mTexturePath,type:"image" },
+						{url:this.mTextureJsonPath,type:"json" },
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+					}
 					break ;
 				case 1:
 					this.mTexturePath=this.versionPath+"/"+this.DBFileName+".png";
@@ -4288,10 +4379,10 @@
 			var msg;
 			switch(this.mFactoryType){
 				case 0:
-					msg="DragonBone支持版本为:"+"4.5"+"~"+"4.9.5"+""+"当前文件版本为"+ver;
+					msg="DragonBone支持版本为:"+"4.5"+"~"+"5.1.0"+""+"当前文件版本为"+ver;
 					break ;
 				case 1:
-					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.5.46"+""+"当前文件版本为"+ver;
+					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.6.16"+""+"当前文件版本为"+ver;
 					break ;
 				}
 			if (this.mFailFun !=null){
@@ -4308,19 +4399,32 @@
 			tVer=this.getSkeletonVersion(this.mSkeletonJson,this.mFactoryType);
 			if (!this.isSkeletonVersionOK(tVer,this.mFactoryType)){
 				this.onErrorVersion(tVer);
-			}
+			};
+			var tLoadList=[];
+			var tObject;
+			var tPath;
+			var i=0;
 			switch(this.mFactoryType){
 				case 0:
-					this.loadComplete();
+					if (this.tExType==3){
+						this.mTexturePathList=this.textureFileNames;
+						for (i=0;i < this.mTexturePathList.length;i++){
+							tPath=this.join(this.versionPath,this.mTexturePathList[i]);
+							tObject={url:tPath,type:"image" };
+							tLoadList.push(tObject);
+							tObject={url:tPath.replace(".png",".json"),type:"json" };
+							tLoadList.push(tObject);
+						}
+						Laya.loader.load(tLoadList,Handler.create(this,this.loadComplete));
+						}else{
+						this.loadComplete();
+					}
 					break ;
 				case 1:
 					try {
 						var tAtlas=new Atlas();
 						this.mTexturePathList=tAtlas.preInit(this.mTextureJson);
-						var tLoadList=[];
-						var tObject;
-						var tPath;
-						for (var i=0;i < this.mTexturePathList.length;i++){
+						for (i=0;i < this.mTexturePathList.length;i++){
 							tPath=this.join(this.versionPath,this.mTexturePathList[i]);
 							tObject={url:tPath,type:"image" };
 							tLoadList.push(tObject);
@@ -4377,7 +4481,25 @@
 					case 0:
 						this.mDBFactory=new LayaFactory()
 						this.mDBFactory.on("complete",this,this.onCompleteHandler);
-						this.mDBFactory.parseData(this.mTexture,this.mTextureJson,this.mSkeletonJson,this.DBFileName+".png");
+						if (this.tExType==3){
+							var tDataO;
+							var textureLists;
+							textureLists=[];
+							var texturePath;
+							for (i=0;i < this.textureFileNames.length;i++){
+								tDataO={};
+								tTextureName=this.textureFileNames[i];
+								tDataO.name=tTextureName.replace("_tex_","");
+								texturePath=this.join(this.versionPath,tTextureName);
+								tDataO.texture=Loader.getRes(texturePath);
+								tDataO.json=Loader.getRes(texturePath.replace(".png",".json"));
+								textureLists.push(tDataO);
+								this.mDBFactory.parseTextureData(tDataO.texture,tDataO.json,tDataO.name);
+							}
+							this.mDBFactory.skeletonComplete(this.mSkeletonJson);
+							}else{
+							this.mDBFactory.parseData(this.mTexture,this.mTextureJson,this.mSkeletonJson,this.DBFileName+".png");
+						}
 						break ;
 					case 1:
 						this.mSpineFactory=new SpineFactory();
@@ -4430,12 +4552,20 @@
 					var tTextureName;
 					switch(this.mFactoryType){
 						case 0:
+							if (this.tExType==3){
+								for (var i=0;i < this.mTexturePathList.length;i++){
+									tTextureName=this.mTexturePathList[i];
+									tTextureList.push(this.join(this.versionPath,tTextureName));
+									tTextureOutList.push(this.join(this.mSaveTexturePath,tTextureName.replace("_tex_","")));
+								}
+							}else
 							if (this.tExType==2){
 								tTextureList.push(this.join(this.versionPath,this.DBFileName+"_tex.png"));
+								tTextureOutList.push(this.join(this.mSaveTexturePath,this.DBFileName+".png"));
 								}else{
 								tTextureList.push(this.join(this.versionPath,"texture.png"));
+								tTextureOutList.push(this.join(this.mSaveTexturePath,this.DBFileName+".png"));
 							}
-							tTextureOutList.push(this.join(this.mSaveTexturePath,this.DBFileName+".png"));
 							break ;
 						case 1:
 							for (var i=0;i < this.mTexturePathList.length;i++){
@@ -4453,6 +4583,7 @@
 		}
 
 		__proto.clear=function(){
+			Laya.loader.off("error",this,this.onError)
 			try {
 				if (BoneAniTools.mBoneToolsKey){
 					Loader.clearRes(this.mTexturePath);
@@ -4486,6 +4617,18 @@
 			return tOut;
 		}
 
+		__getset(1,BoneAniTools,'SpineTip',function(){
+			return BoneAniTools.getVersionTip("3.4.0.2","3.6.16");
+		},Tools._$SET_SpineTip);
+
+		__getset(1,BoneAniTools,'DragonBoneTip',function(){
+			return BoneAniTools.getVersionTip("4.5","5.1.0");
+		},Tools._$SET_DragonBoneTip);
+
+		BoneAniTools.getVersionTip=function(min,max){
+			return "("+min+"~"+max+")";
+		}
+
 		BoneAniTools.getVerNum=function(ver){
 			var nums;
 			nums=ver.split(".");
@@ -4509,11 +4652,11 @@
 
 		BoneAniTools.mBoneToolsKey=false;
 		BoneAniTools.MinSpine="3.4.0.2";
-		BoneAniTools.MaxSpine="3.5.46";
+		BoneAniTools.MaxSpine="3.6.16";
 		BoneAniTools.MinDragon="4.5";
-		BoneAniTools.MaxDragon="4.9.5";
+		BoneAniTools.MaxDragon="5.1.0";
 		__static(BoneAniTools,
-		['MinSpineNum',function(){return this.MinSpineNum=BoneAniTools.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniTools.getVerNum("3.5.46");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniTools.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniTools.getVerNum("4.9.5");}
+		['MinSpineNum',function(){return this.MinSpineNum=BoneAniTools.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniTools.getVerNum("3.6.16");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniTools.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniTools.getVerNum("5.1.0");}
 		]);
 		return BoneAniTools;
 	})(Tools)
@@ -4540,6 +4683,46 @@
 
 		__class(LayaFactory,'dragonBones.LayaFactory',_super);
 		var __proto=LayaFactory.prototype;
+		__proto.parseTextureData=function(texture,textureJson,textName){
+			this.mTexture=texture;
+			var tJsonData=textureJson;
+			this.mSubTextureArr=[];
+			var tSubTextureArr=tJsonData.SubTexture;
+			var tSubTexture;
+			var tDBTextureData
+			if (tSubTextureArr){
+				var tSubTextureData=null;
+				var tX=0;
+				var tY=0;
+				var tWidth=0;
+				var tHeight=0;
+				var tFrameX=0;
+				var tFrameY=0;
+				var tFrameWidth=0;
+				var tFrameHeight=0;
+				var tName;
+				for (var i=0,n=tSubTextureArr.length;i < n;i++){
+					tSubTextureData=tSubTextureArr[i];
+					tDBTextureData=new DBTextureData();
+					tDBTextureData.x=tX=tSubTextureData.x;
+					tDBTextureData.y=tY=tSubTextureData.y;
+					tDBTextureData.w=tWidth=tSubTextureData.width;
+					tDBTextureData.h=tHeight=tSubTextureData.height;
+					tDBTextureData.frameX=tFrameX=tSubTextureData.frameX;
+					tDBTextureData.frameY=tFrameY=tSubTextureData.frameY;
+					tDBTextureData.frameW=tFrameWidth=tSubTextureData.frameWidth;
+					tDBTextureData.frameH=tFrameHeight=tSubTextureData.frameHeight;
+					tDBTextureData.name=tName=tSubTextureData.name;
+					tDBTextureData.textureSrc=textName;
+					this.mDBTextureDataArray.push(tDBTextureData);
+					this.mDBTextureDataDic[tName]=tDBTextureData;
+					tSubTexture=Texture.create(this.mTexture,tX,tY,tWidth,tHeight,-tFrameX,-tFrameY,tFrameWidth,tFrameHeight);
+					this.mSubTextureArr.push(tSubTexture);
+					this.mSubTextureDic[tName]=tSubTexture;
+				}
+			}
+		}
+
 		__proto.parseData=function(texture,textureJson,skeletonJson,textName){
 			this.mTexture=texture;
 			var tJsonData=textureJson;
@@ -6658,6 +6841,7 @@
 			this.mDBTools=null;
 			this.mNodePath=null;
 			this.tExType=0;
+			this.textureFileNames=null;
 			this.mTexturePathList=null;
 			this.testCompleteFun=null;
 			this.mInvoker=null;
@@ -6695,7 +6879,7 @@
 			], Handler.create(this, this.onLoaded), null, null, 1, true);
 		}
 
-		__proto.loadFile=function(nodePath,dbTools,path,outPath,completeFun,failFun,type,eType,tDBFileName){
+		__proto.loadFile=function(nodePath,dbTools,path,outPath,completeFun,failFun,type,eType,tDBFileName,textureFileNames){
 			(type===void 0)&& (type=0);
 			(eType===void 0)&& (eType=0);
 			this.mNodePath=nodePath;
@@ -6709,8 +6893,14 @@
 			this.mFailFun=failFun;
 			Laya.loader.on("error",this,this.onError)
 			this.tExType=eType;
+			this.textureFileNames=textureFileNames;
 			switch(type){
 				case 0:
+					if (this.tExType==3){
+						this.mTexturePath=this.versionPath+"/"+this.DBFileName+"_tex.png";
+						this.mTextureJsonPath=this.versionPath+"/"+this.DBFileName+"_tex.json";
+						this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+"_ske.json";
+					}else
 					if (eType==2){
 						this.mTexturePath=nodePath.join(this.versionPath,this.DBFileName+"_tex.png");
 						this.mTextureJsonPath=nodePath.join(this.versionPath,this.DBFileName+"_tex.json");
@@ -6722,9 +6912,14 @@
 					}
 					this.mSaveAniPath=nodePath.join(outPath,this.DBFileName+".sk");
 					this.mSaveTexturePath=outPath;
-					Laya.loader.load([{url:this.mTexturePath,type:"image" },
+					if (this.tExType==3){
+						Laya.loader.load([
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+						}else{
+						Laya.loader.load([{url:this.mTexturePath,type:"image" },
 						{url:this.mTextureJsonPath,type:"json" },
 						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+					}
 					break ;
 				case 1:
 					this.mTexturePath=nodePath.join(this.versionPath,this.DBFileName+".png");
@@ -6750,6 +6945,11 @@
 			Laya.loader.on("error",this,this.onError)
 			switch(type){
 				case 0:
+					if (this.tExType==3){
+						this.mTexturePath=this.versionPath+"/"+this.DBFileName+"_tex.png";
+						this.mTextureJsonPath=this.versionPath+"/"+this.DBFileName+"_tex.json";
+						this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+"_ske.json";
+					}else
 					if (this.tExType==2){
 						this.mTexturePath=this.versionPath+"/"+this.DBFileName+"_tex.png";
 						this.mTextureJsonPath=this.versionPath+"/"+this.DBFileName+"_tex.json";
@@ -6760,9 +6960,14 @@
 						this.mSkeletonJsonPath=this.versionPath+"/"+this.DBFileName+".json";
 					}
 					this.mSaveAniPath=this.versionPath+this.DBFileName;
-					Laya.loader.load([{url:this.mTexturePath,type:"image" },
+					if (this.tExType==3){
+						Laya.loader.load([
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+						}else{
+						Laya.loader.load([{url:this.mTexturePath,type:"image" },
 						{url:this.mTextureJsonPath,type:"json" },
-						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded));
+						{url:this.mSkeletonJsonPath,type:"json" }],Handler.create(this,this.onLoaded),null,null,1,true);
+					}
 					break ;
 				case 1:
 					this.mTexturePath=this.versionPath+"/"+this.DBFileName+".png";
@@ -6786,10 +6991,10 @@
 			var msg;
 			switch(this.mFactoryType){
 				case 0:
-					msg="DragonBone支持版本为:"+"4.5"+"~"+"4.9.5"+""+"当前文件版本为"+ver;
+					msg="DragonBone支持版本为:"+"4.5"+"~"+"5.1.0"+""+"当前文件版本为"+ver;
 					break ;
 				case 1:
-					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.5.46"+""+"当前文件版本为"+ver;
+					msg="Spine支持版本为:"+"3.4.0.2"+"~"+"3.6.16"+""+"当前文件版本为"+ver;
 					break ;
 			}
 			msg+="\n动画结果可能不正确:"+this.mSkeletonJsonPath;
@@ -6804,19 +7009,32 @@
 			tVer=this.getSkeletonVersion(this.mSkeletonJson,this.mFactoryType);
 			if (!this.isSkeletonVersionOK(tVer,this.mFactoryType)){
 				this.onErrorVersion(tVer);
-			}
+			};
+			var tLoadList=[];
+			var tObject;
+			var tPath;
+			var i=0;
 			switch(this.mFactoryType){
 				case 0:
-					this.loadComplete();
+					if (this.tExType==3){
+						this.mTexturePathList=this.textureFileNames;
+						for (i=0;i < this.mTexturePathList.length;i++){
+							tPath=this.join(this.versionPath,this.mTexturePathList[i]);
+							tObject={url:tPath,type:"image" };
+							tLoadList.push(tObject);
+							tObject={url:tPath.replace(".png",".json"),type:"json" };
+							tLoadList.push(tObject);
+						}
+						Laya.loader.load(tLoadList,Handler.create(this,this.loadComplete));
+						}else{
+						this.loadComplete();
+					}
 					break ;
 				case 1:
 					try {
 						var tAtlas=new Atlas();
 						this.mTexturePathList=tAtlas.preInit(this.mTextureJson);
-						var tLoadList=[];
-						var tObject;
-						var tPath;
-						for (var i=0;i < this.mTexturePathList.length;i++){
+						for (i=0;i < this.mTexturePathList.length;i++){
 							tPath=this.join(this.versionPath,this.mTexturePathList[i]);
 							tObject={url:tPath,type:"image" };
 							tLoadList.push(tObject);
@@ -6873,7 +7091,25 @@
 					case 0:
 						this.mDBFactory=new LayaFactory()
 						this.mDBFactory.on("complete",this,this.onCompleteHandler);
-						this.mDBFactory.parseData(this.mTexture,this.mTextureJson,this.mSkeletonJson,this.DBFileName+".png");
+						if (this.tExType==3){
+							var tDataO;
+							var textureLists;
+							textureLists=[];
+							var texturePath;
+							for (i=0;i < this.textureFileNames.length;i++){
+								tDataO={};
+								tTextureName=this.textureFileNames[i];
+								tDataO.name=tTextureName.replace("_tex_","");
+								texturePath=this.join(this.versionPath,tTextureName);
+								tDataO.texture=Loader.getRes(texturePath);
+								tDataO.json=Loader.getRes(texturePath.replace(".png",".json"));
+								textureLists.push(tDataO);
+								this.mDBFactory.parseTextureData(tDataO.texture,tDataO.json,tDataO.name);
+							}
+							this.mDBFactory.skeletonComplete(this.mSkeletonJson);
+							}else{
+							this.mDBFactory.parseData(this.mTexture,this.mTextureJson,this.mSkeletonJson,this.DBFileName+".png");
+						}
 						break ;
 					case 1:
 						this.mSpineFactory=new SpineFactory();
@@ -6928,12 +7164,20 @@
 					var tTextureName;
 					switch(this.mFactoryType){
 						case 0:
+							if (this.tExType==3){
+								for (var i=0;i < this.mTexturePathList.length;i++){
+									tTextureName=this.mTexturePathList[i];
+									tTextureList.push(this.join(this.versionPath,tTextureName));
+									tTextureOutList.push(this.join(this.mSaveTexturePath,tTextureName.replace("_tex_","")));
+								}
+							}else
 							if (this.tExType==2){
 								tTextureList.push(this.join(this.versionPath,this.DBFileName+"_tex.png"));
+								tTextureOutList.push(this.join(this.mSaveTexturePath,this.DBFileName+".png"));
 							}else{
 								tTextureList.push(this.join(this.versionPath,"texture.png"));
+								tTextureOutList.push(this.join(this.mSaveTexturePath,this.DBFileName+".png"));
 							}
-							tTextureOutList.push(this.join(this.mSaveTexturePath,this.DBFileName+".png"));
 							break ;
 						case 1:
 							for (var i=0;i < this.mTexturePathList.length;i++){
@@ -6951,6 +7195,7 @@
 		}
 
 		__proto.clear=function(){
+			Laya.loader.off("error",this,this.onError)
 			try {
 				if (BoneAniToolsLive.mBoneToolsKey){
 					Loader.clearRes(this.mTexturePath);
@@ -6984,6 +7229,18 @@
 			return tOut;
 		}
 
+		__getset(1,BoneAniToolsLive,'SpineTip',function(){
+			return BoneAniToolsLive.getVersionTip("3.4.0.2","3.6.16");
+		},Tools._$SET_SpineTip);
+
+		__getset(1,BoneAniToolsLive,'DragonBoneTip',function(){
+			return BoneAniToolsLive.getVersionTip("4.5","5.1.0");
+		},Tools._$SET_DragonBoneTip);
+
+		BoneAniToolsLive.getVersionTip=function(min,max){
+			return "("+min+"~"+max+")";
+		}
+
 		BoneAniToolsLive.getVerNum=function(ver){
 			var nums;
 			nums=ver.split(".");
@@ -7007,12 +7264,12 @@
 
 		BoneAniToolsLive.mBoneToolsKey=false;
 		BoneAniToolsLive.MinSpine="3.4.0.2";
-		BoneAniToolsLive.MaxSpine="3.5.46";
+		BoneAniToolsLive.MaxSpine="3.6.16";
 		BoneAniToolsLive.MinDragon="4.5";
-		BoneAniToolsLive.MaxDragon="4.9.5";
+		BoneAniToolsLive.MaxDragon="5.1.0";
 		__static(BoneAniToolsLive,
-			['MinSpineNum',function(){return this.MinSpineNum=BoneAniToolsLive.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniToolsLive.getVerNum("3.5.46");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniToolsLive.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniToolsLive.getVerNum("4.9.5");}
-			]);
+		['MinSpineNum',function(){return this.MinSpineNum=BoneAniTools.getVerNum("3.4.0.2");},'MaxSpineNum',function(){return this.MaxSpineNum=BoneAniTools.getVerNum("3.6.16");},'MinDragonNum',function(){return this.MinDragonNum=BoneAniTools.getVerNum("4.5");},'MaxDragonNum',function(){return this.MaxDragonNum=BoneAniTools.getVerNum("5.1.0");}
+		]);
 		return BoneAniToolsLive;
 	})(Tools)
 
