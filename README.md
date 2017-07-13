@@ -1,6 +1,7 @@
 # Spine 2D Live Loader for LayaAir
 
 ## Changelog
+* 2017.Jul.13: Updated for using files come from LayaAir IDE 1.7.6. And verified there is no need to change anything with the newest LayaAir IDE 1.7.7 beta update. Sample project is also updated.
 * 2017.May.25: Verified there is no need to change anything with the newest LayaAir IDE 1.7.5 beta update.
 * 2017.Apr.28: Updated for using files come from LayaAir IDE 1.7.4 beta.
 * 2017.Apr.27: Initial version based on LayaAir IDE 1.7.3 beta.
